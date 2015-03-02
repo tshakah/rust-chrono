@@ -271,6 +271,7 @@ Advanced time zone handling is not yet supported (but is planned in 0.3).
 #![deny(missing_docs)]
 
 extern crate "time" as stdtime;
+extern crate "rustc-serialize" as rustc_serialize;
 
 pub use duration::Duration;
 pub use offset::{TimeZone, Offset, LocalResult};

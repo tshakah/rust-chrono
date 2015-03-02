@@ -17,6 +17,7 @@ use naive::time::NaiveTime;
 use naive::datetime::NaiveDateTime;
 use format::{Item, Numeric, Pad};
 use format::{parse, Parsed, ParseError, ParseResult, DelayedFormat, StrftimeItems};
+use rustc_serialize::{Decodable, Decoder, Encodable, Encoder};
 
 use self::internals::{DateImpl, Of, Mdf, YearFlags};
 
@@ -451,6 +452,24 @@ impl NaiveDate {
     }
 }
 
+impl Encodable for NaiveDate {
+    fn encode<S: Encoder>(&self, e: &mut S) -> Result<(), S::Error> {
+        self.to_string().encode(e)
+    }
+}
+
+impl Decodable for NaiveDate {
+    fn decode<D: Decoder>(d: &mut D) -> Result<NaiveDate, D::Error> {
+        let potential_date : String = try!(Decodable::decode(d));
+        match NaiveDate::parse_from_str(potential_date.as_slice(), "%Y-%m-%d") {
+            Ok(date) => Ok(date),
+            Err(_) => Err(d.error(format!(
+                "Date invalid: {} (expected format is %Y-%m-%d)", potential_date
+            ).as_slice()))
+        }
+    }
+}
+
 impl Datelike for NaiveDate {
     #[inline] fn year(&self) -> i32 { (self.ymdf >> 13) as i32 }
     #[inline] fn month(&self) -> u32 { self.mdf().month() }
@@ -602,6 +621,7 @@ mod tests {
     use duration::Duration;
     use std::{i32, u32};
     use std::iter::{range_inclusive, range_step_inclusive};
+    use rustc_serialize::json;
 
     #[test]
     fn test_date_from_ymd() {
@@ -1017,12 +1037,33 @@ mod tests {
         assert_eq!(NaiveDate::from_ymd(2010, 1, 3).format("%G,%g,%U,%W,%V").to_string(),
                    "2009,09,01,00,53");
     }
+
+    #[test]
+    fn test_naive_date_serialization() {
+        assert_eq!(NaiveDate::from_ymd(2001, 12, 01), json::decode("\"2001-12-01\"").unwrap());
+        assert_eq!(NaiveDate::from_ymd(1, 12, 01), json::decode("\"0001-12-01\"").unwrap());
+        assert_eq!(NaiveDate::from_ymd(-1, 06, 20), json::decode("\"-0001-06-20\"").unwrap());
+        assert_eq!(json::encode(&NaiveDate::from_ymd(1285, 05, 25)).unwrap(), "\"1285-05-25\"");
+        assert_eq!(json::encode(&NaiveDate::from_ymd(-10, 01, 01)).unwrap(), "\"-0010-01-01\"");
+    }
+
+    #[test]
+    fn failing_date_decode() {
+        let result_1 : Result<NaiveDate, json::DecoderError> = json::decode("\"2001-13-01\"");
+        let result_2 : Result<NaiveDate, json::DecoderError> = json::decode("\"2001/12/01\"");
+        assert_eq!(Err(json::DecoderError::ApplicationError(
+                   "Date invalid: 2001-13-01 (expected format is %Y-%m-%d)".to_string())),
+                   result_1);
+        assert_eq!(Err(json::DecoderError::ApplicationError(
+                   "Date invalid: 2001/12/01 (expected format is %Y-%m-%d)".to_string())),
+                   result_2);
+    }
 }
 
 /**
  * The internal implementation of the calendar and ordinal date.
  *
- * The current implementation is optimized for determining year, month, day and day of week. 
+ * The current implementation is optimized for determining year, month, day and day of week.
  * 4-bit `YearFlags` map to one of 14 possible classes of year in the Gregorian calendar,
  * which are included in every packed `NaiveDate` instance.
  * The conversion between the packed calendar date (`Mdf`) and the ordinal date (`Of`) is
