@@ -21,8 +21,8 @@ use rustc_serialize::{Decodable, Decoder, Encodable, Encoder};
 
 use self::internals::{DateImpl, Of, Mdf, YearFlags};
 
-const MAX_YEAR: i32 = internals::MAX_YEAR as i32;
-const MIN_YEAR: i32 = internals::MIN_YEAR as i32;
+const MAX_YEAR: i32 = internals::MAX_YEAR;
+const MIN_YEAR: i32 = internals::MIN_YEAR;
 
 //   MAX_YEAR-12-31 minus 0000-01-01
 // = ((MAX_YEAR+1)-01-01 minus 0001-01-01) + (0001-01-01 minus 0000-01-01) - 1 day
@@ -75,7 +75,7 @@ impl NaiveDate {
     fn from_of(year: i32, of: Of) -> Option<NaiveDate> {
         if year >= MIN_YEAR && year <= MAX_YEAR && of.valid() {
             let Of(of) = of;
-            Some(NaiveDate { ymdf: ((year << 13) as DateImpl) | (of as DateImpl) })
+            Some(NaiveDate { ymdf: (year << 13) | (of as DateImpl) })
         } else {
             None
         }
@@ -471,7 +471,7 @@ impl Decodable for NaiveDate {
 }
 
 impl Datelike for NaiveDate {
-    #[inline] fn year(&self) -> i32 { (self.ymdf >> 13) as i32 }
+    #[inline] fn year(&self) -> i32 { self.ymdf >> 13 }
     #[inline] fn month(&self) -> u32 { self.mdf().month() }
     #[inline] fn month0(&self) -> u32 { self.mdf().month() - 1 }
     #[inline] fn day(&self) -> u32 { self.mdf().day() }
@@ -1367,7 +1367,7 @@ mod internals {
         #[inline]
         pub fn ordinal(&self) -> u32 {
             let Of(of) = *self;
-            (of >> 4) as u32
+            of >> 4
         }
 
         #[inline]
@@ -1477,7 +1477,7 @@ mod internals {
         #[inline]
         pub fn month(&self) -> u32 {
             let Mdf(mdf) = *self;
-            (mdf >> 9) as u32
+            mdf >> 9
         }
 
         #[inline]
@@ -1490,7 +1490,7 @@ mod internals {
         #[inline]
         pub fn day(&self) -> u32 {
             let Mdf(mdf) = *self;
-            ((mdf >> 4) & 0b11111) as u32
+            (mdf >> 4) & 0b11111
         }
 
         #[inline]
