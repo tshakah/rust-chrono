@@ -16,7 +16,5 @@ name = "chrono"
 
 [dependencies]
 time = "0.1.22"
+rustc-serialize = "*"
 
-[dependencies.rustc-serialize]
-git = "https://github.com/andersk/rustc-serialize"
-branch = "io-error"
