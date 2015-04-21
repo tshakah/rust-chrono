@@ -461,11 +461,11 @@ impl Encodable for NaiveDate {
 impl Decodable for NaiveDate {
     fn decode<D: Decoder>(d: &mut D) -> Result<NaiveDate, D::Error> {
         let potential_date : String = try!(Decodable::decode(d));
-        match NaiveDate::parse_from_str(potential_date.as_slice(), "%Y-%m-%d") {
+        match NaiveDate::parse_from_str(potential_date.trim(), "%Y-%m-%d") {
             Ok(date) => Ok(date),
             Err(_) => Err(d.error(format!(
                 "Date invalid: {} (expected format is %Y-%m-%d)", potential_date
-            ).as_slice()))
+            ).trim()))
         }
     }
 }
