@@ -4,7 +4,7 @@
 
 /*!
 
-# Chrono 0.2.11
+# Chrono 0.2.12
 
 Date and time handling for Rust. (also known as `rust-chrono`)
 It aims to be a feature-complete superset of the [time](https://github.com/rust-lang/time) library.
@@ -100,7 +100,6 @@ Addition and subtraction is also supported.
 The following illustrates most supported operations to the date and time:
 
 ~~~~ {.rust}
-# #![feature(std_misc)]
 use chrono::*;
 
 # /* we intentionally fake the datetime...
@@ -267,13 +266,12 @@ Advanced time zone handling is not yet supported (but is planned in 0.3).
 
 #![doc(html_root_url = "https://lifthrasiir.github.io/rust-chrono/")]
 
-#![feature(slice_patterns)]
-#![feature(core, std_misc, zero_one)] // lib stability features as per RFC #507
-#![cfg_attr(test, feature(test))] // ditto
+#![cfg_attr(bench, feature(test))] // lib stability features as per RFC #507
 #![deny(missing_docs)]
 
 extern crate time as stdtime;
 extern crate rustc_serialize;
+extern crate num;
 
 pub use duration::Duration;
 pub use offset::{TimeZone, Offset, LocalResult};
@@ -298,7 +296,7 @@ pub mod duration {
     //!
     //! This used to be a part of rust-chrono,
     //! but has been subsequently merged into Rust's standard library.
-    pub use std::time::duration::{MIN, MAX, Duration};
+    pub use stdtime::Duration;
 }
 pub mod offset;
 pub mod naive {
@@ -318,7 +316,7 @@ pub mod format;
 ///
 /// The order of the days of week depends on the context.
 /// One should prefer `*_from_monday` or `*_from_sunday` methods to get the correct result.
-#[derive(PartialEq, Eq, Copy, Clone, FromPrimitive, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Weekday {
     /// Monday.
     Mon = 0,
@@ -421,6 +419,38 @@ impl Weekday {
         }
     }
 }
+
+impl num::traits::FromPrimitive for Weekday {
+
+    #[inline]
+    fn from_i64(n: i64) -> Option<Weekday> {
+        match n {
+            0 => Some(Weekday::Mon),
+            1 => Some(Weekday::Tue),
+            2 => Some(Weekday::Wed),
+            3 => Some(Weekday::Thu),
+            4 => Some(Weekday::Fri),
+            5 => Some(Weekday::Sat),
+            6 => Some(Weekday::Sun),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    fn from_u64(n: u64) -> Option<Weekday> {
+        match n {
+            0 => Some(Weekday::Mon),
+            1 => Some(Weekday::Tue),
+            2 => Some(Weekday::Wed),
+            3 => Some(Weekday::Thu),
+            4 => Some(Weekday::Fri),
+            5 => Some(Weekday::Sat),
+            6 => Some(Weekday::Sun),
+            _ => None,
+        }
+    }
+}
+
 
 /// The common set of methods for date component.
 pub trait Datelike {
@@ -569,7 +599,7 @@ pub trait Timelike {
 
 #[test]
 fn test_readme_doomsday() {
-    use std::iter::range_inclusive;
+    use num::iter::range_inclusive;
 
     for y in range_inclusive(naive::date::MIN.year(), naive::date::MAX.year()) {
         // even months
