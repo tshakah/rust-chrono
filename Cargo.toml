@@ -18,5 +18,4 @@ name = "chrono"
 rustc-serialize = "*"
 time = "*"
 num = "*"
-rustc-serialize = { version = "0.3", optional = true }
 
