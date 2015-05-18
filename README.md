@@ -1,4 +1,4 @@
-[Chrono][doc] 0.2.12
+[Chrono][doc] 0.2.14
 ====================
 
 [![Chrono on Travis CI][travis-image]][travis]
@@ -34,7 +34,14 @@ Put this in your `Cargo.toml`:
 chrono = "0.2"
 ```
 
-And this in your crate root:
+Or in the case you are using Rust 1.0 beta, pin the exact version:
+
+```toml
+[dependencies]
+chrono = "=0.2.14"
+```
+
+And put this in your crate root:
 
 ```rust
 extern crate chrono;
@@ -45,8 +52,9 @@ extern crate chrono;
 ### Duration
 
 Chrono used to have a `Duration` type, which represents the time span.
-Now Rust standard library includes it as `std::time::duration::Duration` and
-Chrono simply reexports it.
+This is a simple reexport of
+[`time::Duration`](http://doc.rust-lang.org/time/time/struct.Duration.html) type
+provided by crates.io `time` crate (which originally comes from Chrono).
 
 ### Date and Time
 

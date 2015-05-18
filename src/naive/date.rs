@@ -50,6 +50,7 @@ const MIN_DAYS_FROM_YEAR_0: i32 = (MIN_YEAR + 400_000) * 365 +
 /// Allows for every proleptic Gregorian date from Jan 1, 262145 BCE to Dec 31, 262143 CE.
 /// Also supports the conversion from ISO 8601 ordinal and week date.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
 pub struct NaiveDate {
     ymdf: DateImpl, // (year << 13) | of
 }
@@ -156,6 +157,20 @@ impl NaiveDate {
     /// This assumes the proleptic Gregorian calendar, with the year 0 being 1 BCE.
     ///
     /// Returns `None` on the out-of-range date and/or invalid DOY.
+    ///
+    /// # Example
+    ///
+    /// ~~~~
+    /// use chrono::NaiveDate;
+    ///
+    /// assert!(NaiveDate::from_yo_opt(2015, 100).is_some());
+    /// assert!(NaiveDate::from_yo_opt(2015, 0).is_none());
+    /// assert!(NaiveDate::from_yo_opt(2015, 365).is_some());
+    /// assert!(NaiveDate::from_yo_opt(2015, 366).is_none());
+    /// assert!(NaiveDate::from_yo_opt(-4, 366).is_some()); // 5 BCE is a leap year
+    /// assert!(NaiveDate::from_yo_opt(400000, 1).is_none());
+    /// assert!(NaiveDate::from_yo_opt(-400000, 1).is_none());
+    /// ~~~~
     pub fn from_yo_opt(year: i32, ordinal: u32) -> Option<NaiveDate> {
         let flags = YearFlags::from_year(year);
         NaiveDate::from_of(year, Of::new(ordinal, flags))
@@ -242,8 +257,23 @@ impl NaiveDate {
     /// in the proleptic Gregorian calendar.
     ///
     /// Returns `None` on the out-of-range date.
+    ///
+    /// # Example
+    ///
+    /// ~~~~
+    /// use chrono::NaiveDate;
+    ///
+    /// assert_eq!(NaiveDate::from_num_days_from_ce_opt(730000),
+    ///            Some(NaiveDate::from_ymd(1999, 9, 3)));
+    /// assert_eq!(NaiveDate::from_num_days_from_ce_opt(1),
+    ///            Some(NaiveDate::from_ymd(1, 1, 1)));
+    /// assert_eq!(NaiveDate::from_num_days_from_ce_opt(0),
+    ///            Some(NaiveDate::from_ymd(0, 12, 31)));
+    /// assert_eq!(NaiveDate::from_num_days_from_ce_opt(100000000), None);
+    /// assert_eq!(NaiveDate::from_num_days_from_ce_opt(-100000000), None);
+    /// ~~~~
     pub fn from_num_days_from_ce_opt(days: i32) -> Option<NaiveDate> {
-        let days = days + 365; // make January 1, 1 BCE equal to day 0
+        let days = days + 365; // make December 31, 1 BCE equal to day 0
         let (year_div_400, cycle) = div_mod_floor(days, 146097);
         let (year_mod_400, ordinal) = internals::cycle_to_yo(cycle as u32);
         let flags = YearFlags::from_year_mod_400(year_mod_400 as i32);
@@ -1097,6 +1127,7 @@ mod internals {
     /// and `bbb` is a non-zero `Weekday` (mapping `Mon` to 7) of the last day in the past year
     /// (simplifies the day of week calculation from the 1-based ordinal).
     #[derive(PartialEq, Eq, Copy, Clone)]
+    #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
     pub struct YearFlags(pub u8);
 
     pub const A: YearFlags = YearFlags(0o15); pub const AG: YearFlags = YearFlags(0o05);
@@ -1337,6 +1368,7 @@ mod internals {
     /// The whole bits except for the least 3 bits are referred as `Ol` (ordinal and leap flag),
     /// which is an index to the `OL_TO_MDL` lookup table.
     #[derive(PartialEq, PartialOrd, Copy, Clone)]
+    #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
     pub struct Of(pub u32);
 
     impl Of {
@@ -1438,6 +1470,7 @@ mod internals {
     /// (month, day of month and leap flag),
     /// which is an index to the `MDL_TO_OL` lookup table.
     #[derive(PartialEq, PartialOrd, Copy, Clone)]
+    #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
     pub struct Mdf(pub u32);
 
     impl Mdf {

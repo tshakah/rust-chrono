@@ -4,7 +4,7 @@
 
 /*!
 
-# Chrono 0.2.12
+# Chrono 0.2.14
 
 Date and time handling for Rust. (also known as `rust-chrono`)
 It aims to be a feature-complete superset of the [time](https://github.com/rust-lang/time) library.
@@ -30,7 +30,14 @@ Put this in your `Cargo.toml`:
 chrono = "0.2"
 ```
 
-And this in your crate root:
+Or in the case you are using Rust 1.0 beta, pin the exact version:
+
+```toml
+[dependencies]
+chrono = "=0.2.14"
+```
+
+And put this in your crate root:
 
 ```rust
 extern crate chrono;
@@ -41,8 +48,9 @@ extern crate chrono;
 ### Duration
 
 Chrono used to have a `Duration` type, which represents the time span.
-Now Rust standard library includes it as `std::time::duration::Duration` and
-Chrono simply reexports it.
+This is a simple reexport of
+[`time::Duration`](http://doc.rust-lang.org/time/time/struct.Duration.html) type
+provided by crates.io `time` crate (which originally comes from Chrono).
 
 ### Date and Time
 
@@ -272,6 +280,8 @@ Advanced time zone handling is not yet supported (but is planned in 0.3).
 extern crate time as stdtime;
 extern crate rustc_serialize;
 extern crate num;
+#[cfg(feature = "rustc-serialize")]
+extern crate rustc_serialize;
 
 pub use duration::Duration;
 pub use offset::{TimeZone, Offset, LocalResult};
@@ -317,6 +327,7 @@ pub mod format;
 /// The order of the days of week depends on the context.
 /// One should prefer `*_from_monday` or `*_from_sunday` methods to get the correct result.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
 pub enum Weekday {
     /// Monday.
     Mon = 0,

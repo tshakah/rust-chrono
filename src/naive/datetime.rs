@@ -20,6 +20,7 @@ use format::{parse, Parsed, ParseError, ParseResult, DelayedFormat, StrftimeItem
 
 /// ISO 8601 combined date and time without timezone.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
 pub struct NaiveDateTime {
     date: NaiveDate,
     time: NaiveTime,
@@ -456,6 +457,14 @@ mod tests {
         let dt = NaiveDate::from_ymd(2012, 6, 30).and_hms_milli(23, 59, 59, 1_000);
         assert_eq!(dt.format("%c").to_string(), "Sat Jun 30 23:59:60 2012");
         assert_eq!(dt.format("%s").to_string(), "1341100799"); // not 1341100800, it's intentional.
+    }
+
+    #[test]
+    fn test_datetime_add_sub_invariant() { // issue #37
+        let base = NaiveDate::from_ymd(2000, 1, 1).and_hms(0, 0, 0);
+        let t = -946684799990000;
+        let time = base + Duration::microseconds(t);
+        assert_eq!(t, (time - base).num_microseconds().unwrap());
     }
 }
 
