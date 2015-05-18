@@ -280,8 +280,6 @@ Advanced time zone handling is not yet supported (but is planned in 0.3).
 extern crate time as stdtime;
 extern crate rustc_serialize;
 extern crate num;
-#[cfg(feature = "rustc-serialize")]
-extern crate rustc_serialize;
 
 pub use duration::Duration;
 pub use offset::{TimeZone, Offset, LocalResult};
